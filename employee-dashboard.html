@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+      margin-top: 30px;
+    }
+
+    .container {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    button {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #salarySection, #leaveRequestSection {
+      width: 80%;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+      display: none;
+    }
+
+    #salarySection h2, #leaveRequestSection h2 {
+      color: #333;
+    }
+
+    #salarySection p, #leaveRequestSection p {
+      font-size: 18px;
+      color: #555;
+      margin: 10px 0;
+    }
+
+    #salarySection p strong, #leaveRequestSection p strong {
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #888;
+    }
+
+    textarea, input[type="text"], button[type="submit"] {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    textarea {
+      resize: none;
+    }
+  </style>
+  <script>
+    // Fetch and display the employee's name after login
+    async function fetchEmployeeDetails() {
+      const empId = prompt("Please enter your Employee ID:");
+
+      if (!empId) {
+        alert("Employee ID is required");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/get-employee-details?EmpId=${empId}`);
+        if (!response.ok) throw new Error('Failed to fetch employee details.');
+
+        const employee = await response.json();
+        const nameSection = document.getElementById('employeeName');
+        nameSection.innerHTML = `Welcome, ${employee.Name}!`;
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Fetch the employee's salary details
+    async function fetchEmployeeSalary() {
+      const empId = prompt("Please enter your Employee ID:");
+
+      if (!empId) {
+        alert("Employee ID is required");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/get-salary-slip?EmpId=${empId}`);
+        if (!response.ok) throw new Error('Failed to fetch salary data.');
+
+        const salary = await response.json();
+        const salarySection = document.getElementById('salarySection');
+        salarySection.innerHTML = ` 
+          <h2>Your Salary Slip</h2>
+          <p><strong>EmpId:</strong> ${salary.EmpId}</p>
+          <p><strong>Pay Amount:</strong> ${salary.PayAmount}</p>
+          <p><strong>Bonus:</strong> ${salary.Bonus}</p>
+          <p><strong>Travel Pay:</strong> ${salary.TravelPay}</p>
+        `;
+        salarySection.style.display = 'block';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Open the leave request form
+    function openLeaveRequestForm() {
+      const leaveSection = document.getElementById('leaveRequestSection');
+      leaveSection.style.display = 'block';
+    }
+
+    // Handle leave request submission
+    async function submitLeaveRequest(event) {
+      event.preventDefault();
+
+      const empId = prompt("Please enter your Employee ID:");
+      const leaveType = document.getElementById('leaveType').value;
+      const startDate = document.getElementById('leaveStartDate').value;
+      const endDate = document.getElementById('leaveEndDate').value;
+
+      if (!empId || !leaveType || !startDate || !endDate) {
+        alert("All fields are required");
+        return;
+      }
+
+      try {
+        const response = await fetch('/submit-leave-request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            EmpId: empId,
+            LeaveType: leaveType,
+            StartDate: startDate,
+            EndDate: endDate
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to submit leave request.');
+
+        alert('Leave request submitted successfully!');
+        document.getElementById('leaveRequestForm').reset();
+        document.getElementById('leaveRequestSection').style.display = 'none';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Employee Dashboard</h1>
+
+  <h2 id="employeeName" style="text-align:center;"></h2>
+
+  <div class="container">
+    <button onclick="fetchEmployeeSalary()">View Your Salary Slip</button>
+    <button onclick="openLeaveRequestForm()">Request Leave</button>
+  </div>
+
+  <div id="salarySection">
+    <!-- Employee salary details will be shown here -->
+  </div>
+
+  <div id="leaveRequestSection">
+    <h2>Request Leave</h2>
+    <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
+      <label for="leaveType">Reason:</label>
+      <textarea id="leaveType" rows="4" cols="40" placeholder="Enter your reason..." required></textarea>
+
+      <label for="leaveStartDate">Start Date:</label>
+      <input type="date" id="leaveStartDate" required>
+
+      <label for="leaveEndDate">End Date:</label>
+      <input type="date" id="leaveEndDate" required>
+
+      <button type="submit">Submit Leave Request</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2024 Employee Management System</p>
+  </div>
+</body>
+</html>

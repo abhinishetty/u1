@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .logout-container {
+      text-align: center;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      color: #4CAF50;
+    }
+
+    p {
+      font-size: 18px;
+      color: #555;
+    }
+
+    button {
+      padding: 15px 30px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+  <script>
+    function logout() {
+      // This is where you would handle logout logic, for example:
+      // 1. Clear session or token data
+      // 2. Redirect to login page
+
+      // For demonstration purposes, we're just redirecting to login.html
+      window.location.href = '/login.html';  // Change this to your actual login page URL
+    }
+  </script>
+</head>
+<body>
+  <div class="logout-container">
+    <h1>Goodbye!</h1>
+    <p>You have been successfully logged out.</p>
+    <button onclick="logout()">Log Out</button>
+  </div>
+</body>
+</html>

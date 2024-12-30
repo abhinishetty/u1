@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+      margin-top: 30px;
+    }
+
+    .container {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    button {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #employeeSection, #leaveRequestSection {
+      width: 90%;
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+      display: none;
+    }
+
+    #employeeSection h2, #leaveRequestSection h2 {
+      color: #333;
+    }
+
+    #employeeSection table, #leaveRequestSection table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    #employeeSection th, #leaveRequestSection th, #employeeSection td, #leaveRequestSection td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    #employeeSection th, #leaveRequestSection th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #employeeSection td button, #leaveRequestSection td button {
+      background-color: #f44336;
+      border-radius: 5px;
+      padding: 8px 16px;
+      color: white;
+      border: none;
+    }
+
+    #employeeSection td button:hover, #leaveRequestSection td button:hover {
+      background-color: #e53935;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #888;
+    }
+
+    .close-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+  <script>
+    async function fetchEmployees() {
+      try {
+        const response = await fetch('/employees');
+        if (!response.ok) throw new Error('Failed to fetch employee data.');
+
+        const employees = await response.json();
+        const table = document.getElementById('employeeTable');
+        const tbody = table.querySelector('tbody');
+
+        tbody.innerHTML = ''; // Clear existing table rows
+
+        employees.forEach(employee => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${employee.EmpId}</td>
+            <td>${employee.Name}</td>
+            <td>${employee.JobRole}</td>
+            <td>${employee.Salary}</td>
+            <td>${employee.ContactInfo}</td>
+            <td>${employee.HireDate}</td>
+            <td>
+              <button onclick="showDeleteEmployeeForm('${employee.EmpId}', '${employee.ManagerId}')">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        document.getElementById('employeeSection').style.display = 'block';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function fetchLeaveRequests() {
+      try {
+        const response = await fetch('/leave-requests');
+        if (!response.ok) throw new Error('Failed to fetch leave request data.');
+
+        const leaveRequests = await response.json();
+        const table = document.getElementById('leaveRequestTable');
+        const tbody = table.querySelector('tbody');
+
+        tbody.innerHTML = ''; // Clear existing table rows
+
+        leaveRequests.forEach(leave => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${leave.EmpId}</td>
+            <td>${leave.EmployeeName}</td>
+            <td>${leave.LeaveType}</td>
+            <td>${leave.LeaveType}</td>
+            <td>${leave.StartDate}</td>
+            <td>${leave.EndDate}</td>
+            <td>${leave.Status}</td>
+            <td>
+              <button onclick="approveLeave('${leave.EmpId}', '${leave.LeaveId}')">Approve</button>
+              <button onclick="rejectLeave('${leave.EmpId}', '${leave.LeaveId}')">Reject</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        document.getElementById('leaveRequestSection').style.display = 'block';
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function approveLeave(empId, leaveId) {
+      try {
+        const response = await fetch(`/approve-leave/${leaveId}`, { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to approve leave.');
+
+        alert('Leave approved!');
+        fetchLeaverequests(); // Refresh leave requests after approval
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function rejectLeave(empId, leaveId) {
+      try {
+        const response = await fetch(`/reject-leave/${leaveId}`, { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to reject leave.');
+
+        alert('Leave rejected!');
+        fetchLeaveRequests(); // Refresh leave requests after rejection
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function closeEmployeeSection() {
+      document.getElementById('employeeSection').style.display = 'none';
+    }
+
+    function closeLeaveRequestSection() {
+      document.getElementById('leaveRequestSection').style.display = 'none';
+    }
+
+    async function addEmployee(event) {
+      event.preventDefault();
+
+      const formData = new FormData(document.getElementById('addEmployeeForm'));
+      const employeeData = Object.fromEntries(formData);  // Convert FormData to JSON object
+
+      try {
+        const response = await fetch('/add-employee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(employeeData)  // Send the data as JSON
+        });
+
+        if (!response.ok) throw new Error('Failed to add employee.');
+        alert('Employee added successfully!');
+        document.getElementById('addEmployeeForm').reset();
+        fetchEmployees(); // Refresh employee list
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function deleteEmployee(event) {
+      event.preventDefault();
+
+      const empId = document.getElementById('deleteEmpId').value;
+      const managerId = document.getElementById('deleteManagerId').value;
+
+      // Check if EmpId and ManagerId are provided
+      if (!empId || !managerId) {
+        return alert('Please provide both Employee ID and Manager ID.');
+      }
+
+      try {
+        const response = await fetch('/delete-employee', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ EmpId: empId, ManagerId: managerId })  // Send EmpId and ManagerId as JSON
+        });
+
+        if (!response.ok) throw new Error('Failed to delete employee.');
+        alert('Employee deleted successfully!');
+        fetchEmployees(); // Refresh employee list after deletion
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Show the delete employee form and pre-fill EmpId and ManagerId
+    function showDeleteEmployeeForm(empId, managerId) {
+      document.getElementById('deleteEmpId').value = empId;
+      document.getElementById('deleteManagerId').value = managerId;
+      document.getElementById('deleteEmployeeSection').style.display = 'block';
+    }
+  </script>
+</head>
+<body>
+  <h1>Welcome, Manager!</h1>
+  <div class="container">
+    <button onclick="fetchEmployees()">View All Employees</button>
+    <button onclick="fetchLeaveRequests()">View Leave Requests</button>
+    <div class="close-container">
+      <button onclick="closeEmployeeSection()">Close Employees</button>
+      <button onclick="closeLeaveRequestSection()">Close Leave Requests</button>
+    </div>
+  </div>
+
+  <!-- Employee Section -->
+  <div id="employeeSection">
+    <h2>Employee Details</h2>
+    <table id="employeeTable">
+      <thead>
+        <tr>
+          <th>EmpId</th>
+          <th>Name</th>
+          <th>Job Role</th>
+          <th>Salary</th>
+          <th>Contact Info</th>
+          <th>Hire Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Employee rows will be added dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Leave Request Section -->
+  <div id="leaveRequestSection">
+    <h2>Leave Requests</h2>
+    <table id="leaveRequestTable">
+      <thead>
+        <tr>
+          <th>EmpId</th>
+          <th>Employee Name</th>
+          <th>Leave Type</th>
+          <th>Leave Reason</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Leave request rows will be added dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Employee Form -->
+  <h2>Add New Employee</h2>
+  <form id="addEmployeeForm" onsubmit="addEmployee(event)">
+    <label for="EmpId">Employee ID:</label>
+    <input type="text" id="EmpId" name="EmpId" required><br><br>
+    <label for="Name">Name:</label>
+    <input type="text" id="Name" name="Name" required><br><br>
+    <label for="JobRole">Job Role:</label>
+    <input type="text" id="JobRole" name="JobRole" required><br><br>
+    <label for="Salary">Salary:</label>
+    <input type="number" id="Salary" name="Salary" required><br><br>
+    <label for="ContactInfo">Contact Info:</label>
+    <input type="text" id="ContactInfo" name="ContactInfo" required><br><br>
+    <label for="HireDate">Hire Date:</label>
+    <input type="date" id="HireDate" name="HireDate" required><br><br>
+    <label for="ManagerId">Manager ID:</label>
+    <input type="text" id="ManagerId" name="ManagerId" required><br><br>
+    <label for="Password">Password:</label>
+    <input type="password" id="Password" name="Password" required><br><br>
+    <button type="submit">Add Employee</button>
+  </form>
+
+  <!-- Delete Employee Form -->
+  <div id="deleteEmployeeSection" style="display: none;">
+    <h2>Delete Employee</h2>
+    <form id="deleteEmployeeForm" onsubmit="deleteEmployee(event)">
+      <label for="deleteEmpId">Employee ID:</label>
+      <input type="text" id="deleteEmpId" name="EmpId" required><br><br>
+      <label for="deleteManagerId">Manager ID:</label>
+      <input type="text" id="deleteManagerId" name="ManagerId" required><br><br>
+      <button type="submit">Delete Employee</button>
+    </form>
+  </div>
+</body>
+</html>
